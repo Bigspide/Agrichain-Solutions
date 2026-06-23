@@ -1,0 +1,15 @@
+⚠ Slow filesystem detected. The benchmark took 1599ms. If C:/Users/USER/Antigravity-agrichain solutions/agrichain-solutions\.next/dev is a network drive, consider moving it to a local folder.
+See more: https://nextjs.org/docs/app/guides/local-development
+(node:24424) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+⨯ ./src/app/page.tsx:1:1
+Expression expected
+[31m[1m>[0m [90m1 |[0m ﻿?[32m"use client"[0m;
+  [90m  |[0m [31m[1m^[0m
+  [90m2 |[0m
+  [90m3 |[0m [36mimport[0m [33mReact[0m, { useEffect, useState, useRef } [36mfrom[0m [32m"react"[0m;
+  [90m4 |[0m [36mimport[0m [33mLink[0m [36mfrom[0m [32m"next/link"[0m;
+
+Parsing ecmascript source code failed
+
+

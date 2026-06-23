@@ -1,0 +1,4 @@
+[32m✔[0m [33mConsole Ninja[0m extension is connected to [33mNext.js[0m, see [36mhttps://tinyurl.com/2vt8jxzw[0m
+○ Compiling middleware ...
+> Ready on http://0.0.0.0:3000
+> Socket.IO attached

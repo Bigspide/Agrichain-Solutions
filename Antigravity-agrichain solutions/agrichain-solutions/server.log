@@ -1,0 +1,15 @@
+
+> agrichain-solutions@0.1.0 dev
+> node server.mjs
+
+[32m✔[0m [33mConsole Ninja[0m extension is connected to [33mNext.js[0m, see [36mhttps://tinyurl.com/2vt8jxzw[0m
+⚠ i18n configuration in next.config.ts is unsupported in App Router.
+Learn more about internationalization in App Router: https://nextjs.org/docs/app/building-your-application/routing/internationalization
+⨯ Another next dev server is already running.
+
+- Local:        http://localhost:3000
+- PID:          14104
+- Dir:          C:\Users\USER\Antigravity-agrichain solutions\agrichain-solutions
+- Log:          .next\dev\logs\next-development.log
+
+Run taskkill /PID 14104 /F to stop it.

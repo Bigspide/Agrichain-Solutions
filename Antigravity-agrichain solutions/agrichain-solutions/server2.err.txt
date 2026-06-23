@@ -1,0 +1,31 @@
+⚠ Slow filesystem detected. The benchmark took 305ms. If C:/Users/USER/Antigravity-agrichain solutions/agrichain-solutions\.next/dev is a network drive, consider moving it to a local folder.
+See more: https://nextjs.org/docs/app/guides/local-development
+(node:12388) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+⨯ ./src/app/page.tsx:539:5
+Expected a semicolon
+  [90m537 |[0m     [33mEntreprise[0m: [t([32m"footer.about"[0m), t([32m"footer.careers"[0m), t([32m"footer.partners"[0m), t([32m"footer....[0m
+  [90m538 |[0m     [33mSupport[0m: [t([32m"footer.support"[0m), t([32m"footer.contact"[0m), [32m"FAQ"[0m, [32m"Documentation"[0m],
+[31m[1m>[0m [90m539 |[0m     [33mLÃ©gal[0m: [t([32m"footer.privacy"[0m), t([32m"footer.terms"[0m), [32m"Cookies"[0m, [32m"RGPD"[0m],
+  [90m    |[0m     [31m[1m^[0m
+  [90m540 |[0m   };
+  [90m541 |[0m
+  [90m542 |[0m   [36mreturn[0m (
+
+Parsing ecmascript source code failed
+
+
+
+./src/app/page.tsx:539:5
+Unexpected character '©'
+  [90m537 |[0m     [33mEntreprise[0m: [t([32m"footer.about"[0m), t([32m"footer.careers"[0m), t([32m"footer.partners"[0m), t([32m"footer....[0m
+  [90m538 |[0m     [33mSupport[0m: [t([32m"footer.support"[0m), t([32m"footer.contact"[0m), [32m"FAQ"[0m, [32m"Documentation"[0m],
+[31m[1m>[0m [90m539 |[0m     [33mLÃ©gal[0m: [t([32m"footer.privacy"[0m), t([32m"footer.terms"[0m), [32m"Cookies"[0m, [32m"RGPD"[0m],
+  [90m    |[0m     [31m[1m^[0m
+  [90m540 |[0m   };
+  [90m541 |[0m
+  [90m542 |[0m   [36mreturn[0m (
+
+Parsing ecmascript source code failed
+
+

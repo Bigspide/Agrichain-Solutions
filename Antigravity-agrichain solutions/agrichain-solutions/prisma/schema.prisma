@@ -1,0 +1,372 @@
+generator client {
+  provider   = "prisma-client-js"
+  engineType = "library"
+}
+
+datasource db {
+  provider = "postgresql"
+  url = env("DATABASE_URL")
+}
+
+model User {
+  id             String    @id @default(uuid())
+  email          String    @unique
+  name           String
+  passwordHash   String
+  role           String    @default("consumer") // producer, cooperative, logistics, industry, consumer, investor, admin
+  phone          String?
+  location       String?
+  country        String    @default("CI")
+  language       String    @default("fr")
+  isVerified     Boolean   @default(false)
+  subscription   String    @default("starter") // starter, premium, enterprise
+  
+  // Tokenomics & Wealth
+  agriTokenBalance Float    @default(0)
+  prestigeLevel    String   @default("bronze") // bronze, silver, gold, platinum
+  impactScore      Float    @default(0)
+  
+  // Relations
+  farms          Farm[]
+  fields         Field[]   @relation("FieldOwner")
+  products       Product[]
+  sellerOrders   Order[]   @relation("SellerOrders")
+  buyerOrders    Order[]   @relation("BuyerOrders")
+  walletEntries  WalletTransaction[]
+  notifications  Notification[]
+  benefits       Benefit[]
+  insurancePolicies InsurancePolicy[]
+  forwardContracts ForwardContract[] @relation("ContractSeller")
+  buyerContracts  ForwardContract[] @relation("ContractBuyer")
+  mentorshipsGiven MentorshipSession[] @relation("Mentor")
+  mentorshipsTaken MentorshipSession[] @relation("Mentee")
+  certifications   Certification[]
+  
+  // New Relations to fix P1012
+  animalHealthRecords AnimalHealthRecord[]
+  trips               LogisticsTrip[] @relation("DriverTrips")
+  traceRecords        TraceRecord[] @relation("OperatorRecords")
+  aiConversations     AIConversation[] @relation("AIConversations")
+  voiceCommands       VoiceCommand[] @relation("VoiceCommands")
+  auditLogs           AuditLog[] @relation("AuditLogs")
+  activities          UserActivity[]
+  accounts            Account[]
+  sessions            Session[]
+
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([role])
+}
+
+model ForwardContract {
+  id              String   @id @default(uuid())
+  sellerId        String
+  seller          User     @relation("ContractSeller", fields: [sellerId], references: [id])
+  buyerId         String
+  buyer           User     @relation("ContractBuyer", fields: [buyerId], references: [id])
+  productName     String
+  quantity        Float
+  fixedPrice      Float    // Prix fixé à l'avance
+  totalValue      Float
+  depositAmount   Float    // Dépôt de garantie (Escrow)
+  expirationDate  DateTime
+  status          String   @default("proposed") // proposed, active, fulfilled, cancelled
+  blockchainHash  String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([sellerId, buyerId])
+}
+
+model MentorshipSession {
+  id          String   @id @default(uuid())
+  mentorId    String
+  mentor      User     @relation("Mentor", fields: [mentorId], references: [id])
+  menteeId    String
+  mentee      User     @relation("Mentee", fields: [menteeId], references: [id])
+  topic       String
+  durationMin Int
+  price       Float
+  status      String   @default("scheduled") // scheduled, completed, cancelled
+  rating      Int?
+  createdAt   DateTime @default(now())
+}
+
+model Certification {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  type            String   // BIO, FAIRTRADE, ORGANIC
+  issuer          String
+  issueDate       DateTime @default(now())
+  expiryDate      DateTime
+  satelliteProof  String   // Store NDVI snapshots and spectral data as JSON string
+  blockchainHash  String   @unique
+  status          String   @default("verified")
+  createdAt       DateTime @default(now())
+}
+
+model InsurancePolicy {
+  id             String   @id @default(uuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id])
+  cropType       String
+  coverageAmount Float
+  premiumAmount  Float
+  triggerValue   Float
+  triggerType    String   // rainfall_low, wind_high, etc.
+  status         String   @default("active")
+  startDate      DateTime @default(now())
+  endDate        DateTime
+  createdAt      DateTime @default(now())
+}
+
+model WalletTransaction {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  farmId      String?
+  farm        Farm?    @relation(fields: [farmId], references: [id])
+  type        String   // credit, debit
+  amount      Float
+  currency    String   @default("XOF")
+  description String
+  category    String   // sale, reward, insurance, escrow, fee
+  reference   String   @unique
+  status      String   @default("completed")
+  createdAt   DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  title     String
+  message   String
+  type      String
+  status    String   @default("unread")
+  createdAt DateTime @default(now())
+}
+
+model Benefit {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  title       String
+  type        String
+  isPermanent Boolean  @default(false)
+  expiresAt   DateTime?
+  value       Float?
+  createdAt   DateTime @default(now())
+}
+
+model NexusEvolution {
+  id              String   @id @default(uuid())
+  trigger         String   // e.g., "PERFORMANCE_DROP", "CROP_STRESS"
+  observation     String   // What the AI saw
+  reasoning       String   // The AI's thought process
+  actionTaken     String   // The tool called or change made
+  expectedImpact  String
+  status          String   @default("deployed") // proposed, testing, deployed, failed
+  blockchainHash  String?  // Anchor the evolution for trust
+  createdAt       DateTime @default(now())
+}
+
+model AnimalHealthRecord {
+  id              String   @id @default(uuid())
+  animalId        String   // ID of the animal (tag)
+  ownerId         String
+  owner           User     @relation(fields: [ownerId], references: [id])
+  vaccinationDate DateTime
+  vaccineType     String
+  healthStatus    String   // healthy, sick, under-treatment
+  veterinaryNote   String?
+  blockchainHash  String   @unique
+  createdAt       DateTime @default(now())
+}
+
+model InputOptimization {
+  id              String   @id @default(uuid())
+  fieldId         String
+  recommendedInput String  // e.g., "NPK Fertilizer"
+  quantity        Float
+  reasoning       String   // Why the AI suggests this
+  ndviAtTime      Float
+  soilMoisture    Float?
+  createdAt       DateTime @default(now())
+}
+
+model LogisticsTrip {
+  id            String   @id @default(uuid())
+  driverId      String
+  driver        User     @relation("DriverTrips", fields: [driverId], references: [id])
+  vehicleId     String
+  origin        String
+  destination   String
+  status        String   @default("scheduled") // scheduled, in_transit, completed, cancelled
+  currentLat    Float?
+  currentLng    Float?
+  startTime     DateTime?
+  endTime       DateTime?
+  createdAt     DateTime @default(now())
+}
+
+model TraceRecord {
+  id             String   @id @default(uuid())
+  productId      String
+  product        Product  @relation(fields: [productId], references: [id])
+  step           String   // e.g., "Harvest", "Processing", "Shipping"
+  location       String
+  timestamp      DateTime @default(now())
+  operatorId     String
+  operator       User     @relation("OperatorRecords", fields: [operatorId], references: [id])
+  blockchainHash String?
+}
+
+model BlockchainAnchor {
+  id            String   @id @default(uuid())
+  entityType    String   // e.g., "Product", "Certification", "Transaction"
+  entityId      String
+  txHash        String   @unique
+  blockNumber   Int
+  timestamp     DateTime @default(now())
+}
+
+model AIConversation {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation("AIConversations", fields: [userId], references: [id])
+  messages   String   // Array of messages as JSON string
+  summary    String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model VoiceCommand {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation("VoiceCommands", fields: [userId], references: [id])
+  audioUrl      String?
+  transcription String
+  actionTaken   String?
+  success       Boolean  @default(true)
+  createdAt     DateTime @default(now())
+}
+
+model LocaleCatalog {
+  id          String   @id @default(uuid())
+  key         String
+  language    String   // "fr", "en", "dioula", etc.
+  translation String
+  updatedAt   DateTime @updatedAt
+
+  @@unique([key, language])
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  actorId   String?
+  user      User?    @relation("AuditLogs", fields: [actorId], references: [id])
+  action    String
+  entity    String
+  entityId  String?
+  oldValue  String?
+  newValue  String?
+  timestamp DateTime @default(now())
+}
+
+model Farm {
+  id           String   @id @default(uuid())
+  name         String
+  ownerId      String
+  owner        User     @relation(fields: [ownerId], references: [id])
+  region       String?
+  country      String   @default("CI")
+  latitude     Float?
+  longitude    Float?
+  products     Product[]
+  transactions WalletTransaction[]
+  fields       Field[]
+  createdAt    DateTime @default(now())
+}
+
+model Field {
+  id        String   @id @default(uuid())
+  name      String
+  farmId    String
+  farm      Farm     @relation(fields: [farmId], references: [id])
+  ownerId   String?
+  owner     User?    @relation("FieldOwner", fields: [ownerId], references: [id])
+  areaHa    Float?
+  latitude  Float?
+  longitude Float?
+  createdAt DateTime @default(now())
+}
+
+model Product {
+  id             String   @id @default(uuid())
+  name           String
+  description    String
+  category       String          // CROP, LIVESTOCK, AQUACULTURE, INPUT, SERVICE
+  price          Float
+  currency       String   @default("XOF")
+  unit           String
+  quantity       Float
+  sellerId       String
+  seller         User     @relation(fields: [sellerId], references: [id])
+  farmId         String?
+  farm           Farm?    @relation(fields: [farmId], references: [id])
+  traceCode      String?  @unique
+  status         String   @default("available")
+  createdAt      DateTime @default(now())
+  traceRecords   TraceRecord[]
+  orderItems     OrderItem[]
+}
+
+// ProductCategory values: CROP, LIVESTOCK, AQUACULTURE, INPUT, SERVICE
+
+model Order {
+  id                String   @id @default(uuid())
+  orderNumber       String   @unique
+  buyerId           String
+  buyer             User     @relation("BuyerOrders", fields: [buyerId], references: [id])
+  sellerId          String
+  seller            User     @relation("SellerOrders", fields: [sellerId], references: [id])
+  totalAmount       Float
+  status            String   @default("pending")
+  paymentStatus     String   @default("pending")
+  createdAt         DateTime @default(now())
+  items             OrderItem[]
+}
+
+model OrderItem {
+  id          String  @id @default(uuid())
+  orderId     String
+  order       Order   @relation(fields: [orderId], references: [id])
+  productId   String
+  product     Product @relation(fields: [productId], references: [id])
+  quantity    Float
+  totalPrice  Float
+}
+
+model UserActivity {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  action    String
+  timestamp DateTime @default(now())
+}
+
+model Account {
+  id       String @id @default(cuid())
+  userId   String
+  user     User   @relation(fields: [userId], references: [id])
+  provider String
+}
+
+model Session {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+}

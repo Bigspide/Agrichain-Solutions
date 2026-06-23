@@ -1,0 +1,19 @@
+{
+  "name": "agrichain-solutions",
+  "version": 2,
+  "builds": [
+    {
+      "src": "next.config.ts",
+      "use": "@vercel/next",
+      "config": {
+        "includeFiles": ["next.config.ts", "package.json"]
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/auth/:path*",
+      "methods": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"]
+    }
+  ]
+}
