@@ -1,6 +1,7 @@
 import { logger } from '@/lib/logger';
 import { anchorToBlockchain } from './blockchain-service';
 import { prisma } from '@/lib/prisma';
+import { iotService } from '@/lib/iot-service';
 
 /**
  * SATELLITE-SERVICE: NDVI & Remote Sensing Engine
@@ -23,6 +24,11 @@ export interface SatelliteAnalysis {
 export class SatelliteService {
   private static instance: SatelliteService;
 
+  // Simple in-memory cache for analysis results
+  private cache: Map<string, { analysis: SatelliteAnalysis; fetchedAt: number }> = new Map();
+  // Cache TTL in milliseconds (e.g., 10 minutes)
+  private static readonly CACHE_TTL = 10 * 60 * 1000;
+
   private constructor() {}
 
   public static getInstance(): SatelliteService {
@@ -41,14 +47,7 @@ export class SatelliteService {
     return (nir - red) / (nir + red);
   }
 
-import { logger } from '@/lib/logger';
-import { anchorToBlockchain } from './blockchain-service';
-import { prisma } from '@/lib/prisma';
-import { iotService } from './iot-service';
 
-/**
- * SATELLITE-SERVICE: NDVI & Remote Sensing Engine
-...
   private getHealthStatus(ndvi: number): SatelliteAnalysis['healthStatus'] {
     if (ndvi > 0.7) return 'excellent';
     if (ndvi > 0.4) return 'good';
@@ -88,6 +87,14 @@ import { iotService } from './iot-service';
   async analyzeField(fieldId: string) {
     logger.info(`[Satellite-Service] Analyzing field ${fieldId}...`);
 
+    // Check cache first
+    const cached = this.cache.get(fieldId);
+    const now = Date.now();
+    if (cached && now - cached.fetchedAt < SatelliteService.CACHE_TTL) {
+      logger.info(`[Satellite-Service] Returning cached analysis for ${fieldId}`);
+      return cached.analysis;
+    }
+
     const field = await prisma.field.findUnique({ where: { id: fieldId } });
     if (!field || !field.latitude || !field.longitude) {
       throw new Error(`Field ${fieldId} has incomplete geospatial data`);
@@ -98,7 +105,9 @@ import { iotService } from './iot-service';
 
     if (!clientId || !clientSecret) {
       logger.warn("[Satellite-Service] Sentinel Hub credentials missing. Using high-fidelity simulation for demo.");
-      return this.simulateAnalysis(field);
+      const simulated = await this.simulateAnalysis(field);
+      this.cache.set(fieldId, { analysis: simulated, fetchedAt: now });
+      return simulated;
     }
 
     try {
@@ -118,9 +127,9 @@ import { iotService } from './iot-service';
       // We request the B8 (NIR) and B4 (RED) bands
       const processResponse = await fetch("https://services.sentinel-hub.com/api/v1/process", {
         method: "POST",
-        headers: { 
+        headers: {
           "Authorization": `Bearer ${access_token}`,
-          "Content-Type": "application/json" 
+          "Content-Type": "application/json"
         },
         body: JSON.stringify({
           input: {
@@ -146,7 +155,7 @@ import { iotService } from './iot-service';
       // Simplified extraction of mean values from the response buffer
       const red = spectralData.red_mean || Math.random() * 0.2;
       const nir = spectralData.nir_mean || Math.random() * 0.8;
-      
+
       const ndvi = this.calculateNDVI(nir, red);
 
       const analysis: SatelliteAnalysis = {
@@ -160,13 +169,15 @@ import { iotService } from './iot-service';
       // 3. Anchor the result to the Blockchain
       await this.anchorAnalysis(fieldId, analysis);
 
+      // Store in cache
+      this.cache.set(fieldId, { analysis, fetchedAt: now });
+
       return analysis;
     } catch (error: any) {
       logger.error(`[Satellite-Service] Analysis failed: ${error.message}`);
       throw new Error(`Satellite analysis failed: ${error.message}`);
     }
   }
-
   private async anchorAnalysis(fieldId: string, analysis: SatelliteAnalysis) {
     const payload = JSON.stringify({
       fieldId,

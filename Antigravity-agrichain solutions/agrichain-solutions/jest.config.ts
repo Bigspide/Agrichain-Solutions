@@ -14,6 +14,7 @@ const config: Config = {
   globals: { 'ts-jest': { isolatedModules: true } },
   testEnvironment: 'jsdom',
   transform: {
+    '^.+\\.[tj]sx?$': 'babel-jest',
   // Exclude node_modules from ts‑jest compilation
   // This prevents Jest from trying to compile the entire dependency tree,
   // which is a common cause of hangs during initialization.
@@ -22,7 +23,7 @@ const config: Config = {
     '^.+\\.(js|jsx)$': 'babel-jest',
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
-  transformIgnorePatterns: ['/node_modules/'],
+  transformIgnorePatterns: ['/node_modules/', '<rootDir>/.antigravity/'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
     // 'next-auth': '<rootDir>/src/__mocks__/next-auth.js',
@@ -33,6 +34,7 @@ const config: Config = {
   },
   // setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
   testMatch: ['**/src/**/*.test.{ts,tsx,js,jsx}'],
-  testPathIgnorePatterns: ['/node_modules/'],
+  // Exclude Playwright E2E specs (they use .spec.ts) from Jest
+  testPathIgnorePatterns: ['/node_modules/', '<rootDir>/.antigravity/', '<rootDir>/e2e/'],
 };
 export default config;

@@ -38,7 +38,7 @@ export default function FinancialCockpit({ balance, prestige, impactScore, agriT
               <p className="text-xl font-display font-bold text-white">{agriTokenBalance} <span className="text-sm text-gold-400">AGRI</span></p>
             </div>
             <div>
-              <p className="text-xs text-gray-500 font-bold uppercase mb-1">Score d'Impact</p>
+              <p className="text-xs text-gray-500 font-bold uppercase mb-1">Score d&apos;Impact</p>
               <p className="text-xl font-display font-bold text-white">{impactScore} <span className="text-sm text-primary-400">pts</span></p>
             </div>
           </div>

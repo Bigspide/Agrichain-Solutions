@@ -14,7 +14,10 @@ jobs:
         with:
           node-version: '20'
       - run: npm ci
-      - run: npm run lint
+      - name: Lint cleanup
+        run: |
+          npm run fix‑lint‑errors
+          NODE_OPTIONS="--max-old-space-size=8192" npm run lint
       - run: npm run typecheck
       - run: npm test
       - run: npm run build

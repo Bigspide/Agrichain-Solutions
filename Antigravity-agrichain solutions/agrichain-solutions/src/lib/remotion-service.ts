@@ -1,63 +1,88 @@
 import { logger } from '@/lib/logger';
-import { prisma } from '@/lib/prisma';
-import { exec } from 'child_process';
-import { promisify } from 'util';
+import { spawn } from 'child_process';
+import { S3 } from 'aws-sdk';
+import path from 'path';
 
-const execPromise = promisify(exec);
-
+/**
+ * Remotion video rendering service
+ * Uses `npx remotion render` to generate a video and optionally uploads it to S3.
+ */
 export class RemotionService {
-  private static instance: RemotionService;
-  private constructor() {}
+  /** Render a Remotion composition to a file */
+  async render(options: {
+    compositionId: string;
+    entryPoint: string; // path to the entry file (e.g., src/remotion/Video.tsx)
+    outputName: string; // without extension
+    codec?: 'h264' | 'vp8' | 'vp9';
+    width?: number;
+    height?: number;
+    fps?: number;
+    durationInFrames?: number;
+  }) {
+    const {
+      compositionId,
+      entryPoint,
+      outputName,
+      codec = 'h264',
+      width = 1080,
+      height = 1920,
+      fps = 30,
+      durationInFrames,
+    } = options;
 
-  public static getInstance(): RemotionService {
-    if (!RemotionService.instance) {
-      RemotionService.instance = new RemotionService();
+    const outputPath = path.resolve('public', `${outputName}.mp4`);
+    const args = [
+      'remotion',
+      'render',
+      entryPoint,
+      compositionId,
+      '--codec',
+      codec,
+      '--width',
+      String(width),
+      '--height',
+      String(height),
+      '--fps',
+      String(fps),
+      '--output',
+      outputPath,
+    ];
+    if (durationInFrames) {
+      args.push('--frames', `${0}-${durationInFrames - 1}`);
     }
-    return RemotionService.instance;
-  }
 
-  /**
-   * Triggers a real video render via Remotion CLI.
-   */
-  async renderFieldReport(fieldId: string, userId: string, highlights: string[]) {
-    logger.info(`[Remotion-Service] Initiating cinematic render for field ${fieldId}...`);
-
-    const field = await prisma.field.findUnique({ 
-      where: { id: fieldId },
-      include: { farm: true }
+    logger.info('[Remotion] Starting render', { compositionId, outputPath });
+    await new Promise<void>((resolve, reject) => {
+      const proc = spawn('npx', args, { stdio: 'inherit', shell: true });
+      proc.on('close', code => {
+        if (code === 0) resolve();
+        else reject(new Error(`Remotion render exited with code ${code}`));
+      });
     });
 
-    if (!field) throw new Error("Field not found");
+    logger.info('[Remotion] Render completed', { outputPath });
+    return outputPath;
+  }
 
-    // Generate the props for the composition
-    const props = {
-      fieldName: field.name,
-      ndvi: 0.65, // In reality, fetch last analysis from DB
-      status: 'good',
-      highlights: highlights
+  /** Upload rendered video to S3 (or Vercel Blob) */
+  async uploadToS3(filePath: string, bucket: string, key: string) {
+    const s3 = new S3({
+      region: process.env.AWS_REGION,
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    });
+    const fileStream = require('fs').createReadStream(filePath);
+    const params = {
+      Bucket: bucket,
+      Key: key,
+      Body: fileStream,
+      ContentType: 'video/mp4',
     };
-
-    const propsPath = `tmp/remotion_props_${fieldId}.json`;
-    // Normally we'd write the props to a file or pass via CLI
-    
-    try {
-      // Command to render the video using remotion render
-      // npx remotion render src/remotion/index.ts FieldHealthReport out/report_${fieldId}.mp4
-      logger.info(`[Remotion-Service] Executing: npx remotion render...`);
-      
-      // For this prototype, we simulate the CLI call but keep the architecture real
-      // await execPromise(`npx remotion render src/remotion/index.ts FieldHealthReport out/report_${fieldId}.mp4 --props='${JSON.stringify(props)}'`);
-      
-      return { 
-        success: true, 
-        videoUrl: `/reports/videos/report_${fieldId}.mp4`,
-        status: 'rendered' 
-      };
-    } catch (error: any) {
-      logger.error(`[Remotion-Service] Render failed: ${error.message}`);
-      throw new Error(`Remotion render failed: ${error.message}`);
-    }
+    logger.info('[Remotion] Uploading video to S3', { bucket, key });
+    await s3.upload(params).promise();
+    logger.info('[Remotion] Upload successful');
+    return `https://${bucket}.s3.amazonaws.com/${key}`;
   }
 }
 
-export const remotionService = RemotionService.getInstance();
+export const remotionService = new RemotionService();
