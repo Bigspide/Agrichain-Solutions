@@ -4,7 +4,6 @@ import React, { useRef, useMemo, useState, useEffect } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls, PerspectiveCamera, Float, MeshDistortMaterial, Text, Environment } from "@react-three/drei";
 import * as THREE from "three";
-import { motion } from "framer-motion";
 
 /**
  * FieldTwin: 3D Digital Twin of an Agricultural Field

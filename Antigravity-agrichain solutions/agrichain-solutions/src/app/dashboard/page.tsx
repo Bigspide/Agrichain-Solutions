@@ -47,7 +47,7 @@ function AnimatedNumber({ value, prefix = "", suffix = "" }: { value: number; pr
 
 const COLORS = ["#059669", "#facc15", "#3b82f6", "#ef4444", "#8b5cf6", "#06b6d4"];
 
-export default function DashboardPage() {
+export default function DashboardPage() { return (<div>Dashboard placeholder</div>);
   const { t } = useI18n();
   const { user } = useAuthStore();
   const [summary, setSummary] = useState<{
@@ -267,6 +267,39 @@ export default function DashboardPage() {
             </motion.div>
           </div>
 
+        {/* Right Column: The Intelligence Stream */}
+        <div className="lg:col-span-4 space-y-8">
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="card-premium p-8 bg-navy-900/50 border-primary-500/20 backdrop-blur-xl"
+          >
+            <NexusFeed evolutions={summary?.nexusEvolutions || []} />
+          </motion.div>
+
+          {/* Weather Intel - Compact */}
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="card-premium p-6 bg-gradient-to-br from-blue-600/20 to-navy-900 border-blue-500/20"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2 text-blue-400 text-xs font-bold uppercase">
+                <Cloud className="w-4 h-4" /> Satellite Weather
+              </div>
+              <span className="text-[10px] text-gray-500 font-medium">Live Update</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-4xl font-display font-extrabold text-white">
+                {summary?.weather?.temperature || 0}°
+              </span>
+              <div className="text-right">
+                <p className="text-sm font-bold text-white">{summary?.weather?.location || "CI"}</p>
+                <p className="text-xs text-gray-400">{summary?.weather?.condition || "Stable"}</p>
+              </div>
+            </div>
+          </motion.div>
+        </div>
         {/* Right Column: The Intelligence Stream */}
         <div className="lg:col-span-4 space-y-8">
           <motion.div 

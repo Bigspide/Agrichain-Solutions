@@ -25,13 +25,14 @@ const config: Config = {
   transformIgnorePatterns: ['/node_modules/'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
-    'next-auth': '<rootDir>/src/__mocks__/next-auth.js',
-    'next/router': '<rootDir>/src/__mocks__/next/router.js',
+    // 'next-auth': '<rootDir>/src/__mocks__/next-auth.js',
+    // 'next/router': '<rootDir>/src/__mocks__/next/router.js',
     '@prisma/client': '<rootDir>/src/__mocks__/@prisma/client.js',
+    'better-sqlite3': '<rootDir>/src/__mocks__/better-sqlite3.js',
     '^next-i18next/app$': '<rootDir>/__mocks__/next-i18next-app.js',
   },
-  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
+  // setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
   testMatch: ['**/src/**/*.test.{ts,tsx,js,jsx}'],
-  testPathIgnorePatterns: ['/node_modules/', '**/*.skip.ts'],
+  testPathIgnorePatterns: ['/node_modules/'],
 };
 export default config;
